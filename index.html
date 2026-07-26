@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en" class="h-screen overflow-hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,14 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head>
-<body class="bg-gray-950 text-gray-100 font-sans h-full flex flex-col">
+<body class="bg-gray-950 text-gray-100 font-sans h-screen flex flex-col">
 
     <!-- LOGIN MODAL -->
     <div id="login-overlay" class="fixed inset-0 bg-gray-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-gray-900 border border-gray-800 p-8 rounded-2xl max-w-md w-full shadow-2xl">
             <div class="text-center mb-6">
                 <h2 class="text-2xl font-black text-sky-400 mb-1">⚡ ZEROX-AI VIP ACCESS</h2>
-                <p class="text-xs text-gray-400">Enter your Gmail and VIP License Key to unlock.</p>
+                <p class="text-xs text-gray-400">Enter Gmail & VIP License Key to unlock.</p>
             </div>
             
             <form onsubmit="handleLogin(event)" class="space-y-4">
@@ -36,40 +36,122 @@
         </div>
     </div>
 
-    <!-- MAIN TERMINAL UI (HIDDEN UNTIL LOGIN) -->
-    <div id="main-terminal" class="hidden h-full flex-col p-4 space-y-4">
-        <header class="flex justify-between items-center border-b border-gray-800 pb-3">
-            <h1 class="text-xl font-black text-sky-400">⚡ ZEROX-AI TERMINAL</h1>
-            <div id="active-user-display" class="text-xs font-mono text-emerald-400">STATUS: AUTHENTICATED</div>
+    <!-- MAIN TERMINAL UI -->
+    <div id="main-terminal" class="hidden h-full flex-col p-3 space-y-3">
+        <!-- HEADER -->
+        <header class="flex justify-between items-center bg-gray-900 border border-gray-800 px-4 py-2 rounded-xl">
+            <div class="flex items-center space-x-3">
+                <h1 class="text-lg font-black text-sky-400">⚡ ZEROX-AI <span class="text-xs text-gray-400 font-normal">v2.4 PRO</span></h1>
+            </div>
+            <div id="active-pair" class="text-xs font-mono bg-sky-950 border border-sky-800 text-sky-300 px-3 py-1 rounded-lg">
+                ACTIVE PAIR: GBP/USD
+            </div>
+            <div class="text-xs font-mono text-emerald-400 flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>AUTHENTICATED</span>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
-            <!-- CHARTS -->
-            <div class="md:col-span-3 bg-gray-900 border border-gray-800 rounded-xl p-2 min-h-[400px]">
-                <div id="tradingview_chart" class="w-full h-full min-h-[400px]"></div>
+        <!-- MAIN CONTENT LAYOUT (3 COLUMNS) -->
+        <div class="grid grid-cols-12 gap-3 flex-1 overflow-hidden">
+            
+            <!-- LEFT: 11 FOREX PAIRS -->
+            <div class="col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-2 flex flex-col">
+                <h3 class="text-[11px] font-bold font-mono text-gray-400 px-2 py-1 mb-1 border-b border-gray-800">MARKET PAIRS</h3>
+                <div class="space-y-1 overflow-y-auto flex-1 pr-1 font-mono text-xs">
+                    <button onclick="changeSymbol('FX:GBPUSD', 'GBP/USD')" class="w-full text-left px-2 py-2 rounded bg-gray-800 text-sky-400 font-bold flex justify-between"><span>GBP/USD</span> <span class="text-[10px] text-emerald-400">0.01%</span></button>
+                    <button onclick="changeSymbol('FX:EURUSD', 'EUR/USD')" class="w-full text-left px-2 py-2 rounded hover:bg-gray-800/50 text-gray-300 flex justify-between"><span>EUR/USD</span> <span class="text-[10px] text-emerald-400">0.04%</span></button>
+                    <button onclick="changeSymbol('FX:GBPJPY', 'GBP/JPY')" class="w-full text-left px-2 py-2 rounded hover:bg-gray-800/50 text-gray-300 flex justify-between"><span>GBP/JPY</span> <span class="text-[10px] text-rose-400">-0.12%</span></button>
+                    <button onclick="changeSymbol('FX:EURJPY', 'EUR/JPY')" class="w-full text-left px-2 py-2 rounded hover:bg-gray-800/50 text-gray-300 flex justify-between"><span>EUR/JPY</span> <span class="text-[10px] text-emerald-400">0.08%</span></button>
+                    <button onclick="changeSymbol('FX:AUDUSD', 'AUD/USD')" class="w-full text-left px-2 py-2 rounded hover:bg-gray-800/50 text-gray-300 flex justify-between"><span>AUD/USD</span> <span class="text-[10px] text-rose-400">-0.05%</span></button>
+                    <button onclick="changeSymbol('FX:USDCAD', 'USD/CAD')" class="w-full text-left px-2 py-2 rounded hover:bg-gray-800/50 text-gray-300 flex justify-between"><span>USD/CAD</span> <span class="text-[10px] text-emerald-400">0.02%</span></button>
+                    <button onclick="changeSymbol('FX:USDCHF', 'USD/CHF')" class="w-full text-left px-2 py-2 rounded hover:bg-gray-800/50 text-gray-300 flex justify-between"><span>USD/CHF</span> <span class="text-[10px] text-rose-400">-0.09%</span></button>
+                    <button onclick="changeSymbol('FX:NZDUSD', 'NZD/USD')" class="w-full text-left px-2 py-2 rounded hover:bg-gray-800/50 text-gray-300 flex justify-between"><span>NZD/USD</span> <span class="text-[10px] text-emerald-400">0.11%</span></button>
+                    <button onclick="changeSymbol('FX:EURGBP', 'EUR/GBP')" class="w-full text-left px-2 py-2 rounded hover:bg-gray-800/50 text-gray-300 flex justify-between"><span>EUR/GBP</span> <span class="text-[10px] text-rose-400">-0.03%</span></button>
+                    <button onclick="changeSymbol('FX:AUDJPY', 'AUD/JPY')" class="w-full text-left px-2 py-2 rounded hover:bg-gray-800/50 text-gray-300 flex justify-between"><span>AUD/JPY</span> <span class="text-[10px] text-emerald-400">0.15%</span></button>
+                    <button onclick="changeSymbol('OANDA:XAUUSD', 'GOLD (XAU)')" class="w-full text-left px-2 py-2 rounded hover:bg-gray-800/50 text-amber-400 flex justify-between"><span>GOLD</span> <span class="text-[10px] text-emerald-400">0.45%</span></button>
+                </div>
             </div>
 
-            <!-- SIGNALS PANEL -->
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col justify-between">
+            <!-- CENTER: TRADINGVIEW CHART -->
+            <div class="col-span-7 bg-gray-900 border border-gray-800 rounded-xl overflow-hidden p-1 flex flex-col">
+                <div id="tradingview_chart" class="w-full h-full"></div>
+            </div>
+
+            <!-- RIGHT: FULL M1 QUANT SIGNAL PANEL -->
+            <div class="col-span-3 bg-gray-900 border border-gray-800 rounded-xl p-3 flex flex-col justify-between overflow-y-auto">
                 <div>
-                    <h3 class="text-xs font-bold font-mono text-sky-400 mb-2">M1 QUANT SIGNAL</h3>
-                    <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 text-center mb-4">
-                        <span class="text-xs text-gray-400 block mb-1">PREDICTION</span>
-                        <div class="text-2xl font-black text-emerald-400">STRONG BUY</div>
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2 mb-3">
+                        <span class="text-xs font-bold font-mono text-sky-400">M1 SIGNAL MATRIX</span>
+                        <span id="timer" class="text-xs font-mono bg-gray-950 px-2 py-0.5 rounded text-amber-400 border border-amber-900/50">00:45</span>
+                    </div>
+
+                    <!-- PREDICTION BOX -->
+                    <div class="bg-gradient-to-b from-emerald-950/40 to-gray-950 p-4 rounded-xl border border-emerald-800/50 text-center mb-4">
+                        <span class="text-[10px] text-gray-400 font-mono block mb-1">ALGORITHM PREDICTION</span>
+                        <div class="text-2xl font-black text-emerald-400 tracking-wider">STRONG BUY</div>
+                        <span class="text-[10px] text-emerald-500 font-mono">ACCURACY: 94.2%</span>
+                    </div>
+
+                    <!-- INDICATOR MATRIX -->
+                    <div class="space-y-2 font-mono text-xs">
+                        <div class="flex justify-between bg-gray-950 p-2 rounded border border-gray-800">
+                            <span class="text-gray-400">EMA Cross (9/21)</span>
+                            <span class="text-emerald-400 font-bold">BULLISH</span>
+                        </div>
+                        <div class="flex justify-between bg-gray-950 p-2 rounded border border-gray-800">
+                            <span class="text-gray-400">RSI (14)</span>
+                            <span class="text-emerald-400 font-bold">62.4 (BUY)</span>
+                        </div>
+                        <div class="flex justify-between bg-gray-950 p-2 rounded border border-gray-800">
+                            <span class="text-gray-400">MACD Histogram</span>
+                            <span class="text-emerald-400 font-bold">+0.0012</span>
+                        </div>
+                        <div class="flex justify-between bg-gray-950 p-2 rounded border border-gray-800">
+                            <span class="text-gray-400">Volume Trend</span>
+                            <span class="text-sky-400 font-bold">HIGH</span>
+                        </div>
                     </div>
                 </div>
-                <div class="text-center text-xs text-gray-500 font-mono">M1 TIMEFRAME • ZEROX-AI ENGINE</div>
+
+                <div class="mt-4 pt-2 border-t border-gray-800 text-center">
+                    <span class="text-[10px] text-gray-500 font-mono">QUANT ENGINE • AUTO REFRESH M1</span>
+                </div>
             </div>
+
         </div>
     </div>
 
     <script>
+        let widget;
+
+        function loadChart(symbol) {
+            document.getElementById('tradingview_chart').innerHTML = '';
+            widget = new TradingView.widget({
+                "autosize": true,
+                "symbol": symbol,
+                "interval": "1",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "container_id": "tradingview_chart"
+            });
+        }
+
+        function changeSymbol(symbol, name) {
+            loadChart(symbol);
+            document.getElementById('active-pair').innerText = 'ACTIVE PAIR: ' + name;
+        }
+
         function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('user-email').value;
             const key = document.getElementById('user-key').value;
 
-            // Get saved keys from localStorage
             let storedKeys = JSON.parse(localStorage.getItem('zerox_keys')) || [
                 { email: "admin@zerox.com", key: "ZEROX-ADMIN-999", status: "Active" },
                 { email: "demo@gmail.com", key: "ZEROX-VIP-1001", status: "Active" }
@@ -81,19 +163,20 @@
                 document.getElementById('login-overlay').classList.add('hidden');
                 document.getElementById('main-terminal').classList.remove('hidden');
                 document.getElementById('main-terminal').classList.add('flex');
-                
-                new TradingView.widget({
-                    "autosize": true,
-                    "symbol": "FX:GBPUSD",
-                    "interval": "1",
-                    "timezone": "Etc/UTC",
-                    "theme": "dark",
-                    "style": "1",
-                    "container_id": "tradingview_chart"
-                });
+                loadChart('FX:GBPUSD');
+                startTimer();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
+        }
+
+        function startTimer() {
+            let sec = 59;
+            setInterval(() => {
+                document.getElementById('timer').innerText = `00:${sec < 10 ? '0' : ''}${sec}`;
+                sec--;
+                if (sec < 0) sec = 59;
+            }, 1000);
         }
     </script>
 </body>
