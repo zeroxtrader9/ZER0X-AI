@@ -3,96 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZEROX-AI | M1 Forex Quant Platform</title>
+    <title>ZEROX-AI | Quant Trading Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #030712; color: #f9fafb; font-family: sans-serif; }
-        .active-pair { background: #1e293b !important; border-color: #38bdf8 !important; }
-    </style>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head>
-<body class="h-full flex flex-col overflow-hidden">
+<body class="bg-gray-950 text-gray-100 font-sans h-full flex flex-col">
 
-    <!-- HEADER -->
-    <header class="bg-gray-900 border-b border-gray-800 p-3 flex justify-between items-center">
-        <span class="text-xl font-black text-sky-400">⚡ ZEROX-AI PRO v3.0</span>
-        <div id="market-status-badge" class="px-3 py-1 text-xs font-bold rounded-full bg-rose-950 text-rose-400 border border-rose-800">
-            🔴 MARKET CLOSED
-        </div>
-    </header>
-
-    <!-- DASHBOARD -->
-    <div class="flex-1 flex overflow-hidden">
-        
-        <!-- SIDEBAR (11 PAIRS) -->
-        <div class="w-64 bg-gray-950 border-r border-gray-800 p-2 overflow-y-auto shrink-0">
-            <div class="text-xs font-bold text-gray-400 p-2 border-b border-gray-800 mb-2">FOREX PAIRS (11 PAIRS)</div>
-            <div id="pair-list" class="space-y-1"></div>
-        </div>
-
-        <!-- CENTER CHART -->
-        <div class="flex-1 bg-gray-950 relative">
-            <iframe id="tv-iframe" src="https://s.tradingview.com/widgetembed/?symbol=FX%3AGBPJPY&interval=1&theme=dark" class="w-full h-full border-none"></iframe>
-        </div>
-
-        <!-- RIGHT SIGNAL PANEL -->
-        <div class="w-80 bg-gray-900 border-l border-gray-800 p-4 flex flex-col justify-between">
-            <div>
-                <div class="flex justify-between text-xs font-bold text-gray-400 mb-4 pb-2 border-b border-gray-800">
-                    <span id="pair-title">GBP/JPY (M1)</span>
-                    <span class="text-sky-400">Timer: <strong id="timer-text">00:59</strong></span>
-                </div>
-
-                <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 text-center mb-4">
-                    <span class="text-[10px] text-gray-400 font-bold uppercase">Next M1 Prediction</span>
-                    <div id="signal-text" class="text-2xl font-black my-2 text-rose-500">MARKET CLOSED</div>
-                    <div class="text-xs text-gray-400">Confidence: <span id="conf-text" class="text-sky-400 font-bold">0%</span></div>
-                </div>
-
-                <div class="bg-gray-950 p-3 rounded-xl border border-gray-800 text-xs text-gray-400 space-y-2">
-                    <div class="font-bold text-gray-300 border-b border-gray-800 pb-1">Quant Matrix</div>
-                    <div>EMA Alignment: <span class="text-gray-200">Checking...</span></div>
-                    <div>RSI Momentum: <span class="text-gray-200">Checking...</span></div>
-                    <div>MACD Volume: <span class="text-gray-200">Checking...</span></div>
-                </div>
+    <!-- LOGIN MODAL -->
+    <div id="login-overlay" class="fixed inset-0 bg-gray-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 p-8 rounded-2xl max-w-md w-full shadow-2xl">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-black text-sky-400 mb-1">⚡ ZEROX-AI VIP ACCESS</h2>
+                <p class="text-xs text-gray-400">Enter your Gmail and VIP License Key to unlock.</p>
             </div>
             
-            <div class="text-[10px] text-gray-500">🛡️ ZEROX-AI Quant Engine v3.0</div>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 mb-1">Gmail Address</label>
+                    <input type="email" id="user-email" required placeholder="user@gmail.com" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-sky-500 font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 mb-1">VIP License Key</label>
+                    <input type="text" id="user-key" required placeholder="ZEROX-VIP-1001" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-sky-500 font-mono">
+                </div>
+                
+                <div id="login-error" class="text-xs text-rose-400 font-mono hidden text-center">❌ Invalid Key or Access Blocked!</div>
+
+                <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-gray-950 font-bold py-2.5 rounded-xl text-xs transition cursor-pointer">
+                    VERIFY & LAUNCH TERMINAL
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN TERMINAL UI (HIDDEN UNTIL LOGIN) -->
+    <div id="main-terminal" class="hidden h-full flex-col p-4 space-y-4">
+        <header class="flex justify-between items-center border-b border-gray-800 pb-3">
+            <h1 class="text-xl font-black text-sky-400">⚡ ZEROX-AI TERMINAL</h1>
+            <div id="active-user-display" class="text-xs font-mono text-emerald-400">STATUS: AUTHENTICATED</div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
+            <!-- CHARTS -->
+            <div class="md:col-span-3 bg-gray-900 border border-gray-800 rounded-xl p-2 min-h-[400px]">
+                <div id="tradingview_chart" class="w-full h-full min-h-[400px]"></div>
+            </div>
+
+            <!-- SIGNALS PANEL -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xs font-bold font-mono text-sky-400 mb-2">M1 QUANT SIGNAL</h3>
+                    <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 text-center mb-4">
+                        <span class="text-xs text-gray-400 block mb-1">PREDICTION</span>
+                        <div class="text-2xl font-black text-emerald-400">STRONG BUY</div>
+                    </div>
+                </div>
+                <div class="text-center text-xs text-gray-500 font-mono">M1 TIMEFRAME • ZEROX-AI ENGINE</div>
+            </div>
         </div>
     </div>
 
     <script>
-        const pairs = [
-            { symbol: "FX:GBPJPY", name: "GBP/JPY" },
-            { symbol: "FX:EURJPY", name: "EUR/JPY" },
-            { symbol: "FX:AUDCAD", name: "AUD/CAD" },
-            { symbol: "FX:AUDCHF", name: "AUD/CHF" },
-            { symbol: "FX:AUDJPY", name: "AUD/JPY" },
-            { symbol: "FX:AUDUSD", name: "AUD/USD" },
-            { symbol: "FX:CADCHF", name: "CAD/CHF" },
-            { symbol: "FX:CHFJPY", name: "CHF/JPY" },
-            { symbol: "FX:EURAUD", name: "EUR/AUD" },
-            { symbol: "FX:EURCAD", name: "EUR/CAD" },
-            { symbol: "FX:EURCHF", name: "EUR/CHF" }
-        ];
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('user-email').value;
+            const key = document.getElementById('user-key').value;
 
-        function renderPairs() {
-            const list = document.getElementById('pair-list');
-            list.innerHTML = '';
-            pairs.forEach((p, index) => {
-                const btn = document.createElement('button');
-                btn.className = `w-full text-left p-2 rounded border border-gray-800 text-xs font-bold text-gray-200 flex justify-between ${index===0?'active-pair':''}`;
-                btn.onclick = () => {
-                    document.querySelectorAll('#pair-list button').forEach(b => b.classList.remove('active-pair'));
-                    btn.classList.add('active-pair');
-                    document.getElementById('pair-title').innerText = p.name + ' (M1)';
-                    document.getElementById('tv-iframe').src = `https://s.tradingview.com/widgetembed/?symbol=${p.symbol.replace(':','%3A')}&interval=1&theme=dark`;
-                };
-                btn.innerHTML = `<span>${p.name}</span><span class="text-[10px] text-sky-400">M1</span>`;
-                list.appendChild(btn);
-            });
+            // Get saved keys from localStorage
+            let storedKeys = JSON.parse(localStorage.getItem('zerox_keys')) || [
+                { email: "admin@zerox.com", key: "ZEROX-ADMIN-999", status: "Active" },
+                { email: "demo@gmail.com", key: "ZEROX-VIP-1001", status: "Active" }
+            ];
+
+            const found = storedKeys.find(k => k.email === email && k.key === key && k.status === 'Active');
+
+            if (found) {
+                document.getElementById('login-overlay').classList.add('hidden');
+                document.getElementById('main-terminal').classList.remove('hidden');
+                document.getElementById('main-terminal').classList.add('flex');
+                
+                new TradingView.widget({
+                    "autosize": true,
+                    "symbol": "FX:GBPUSD",
+                    "interval": "1",
+                    "timezone": "Etc/UTC",
+                    "theme": "dark",
+                    "style": "1",
+                    "container_id": "tradingview_chart"
+                });
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
         }
-
-        window.onload = renderPairs;
     </script>
 </body>
 </html>
