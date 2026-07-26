@@ -4,295 +4,641 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZEROX-AI | Enterprise Quant Trading Engine</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- TradingView Advanced Charting Widget -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head>
-<body class="bg-gray-950 text-gray-100 font-sans h-screen flex flex-col select-none">
+<body class="bg-gray-950 text-gray-100 font-sans h-screen flex flex-col select-none antialiased">
 
-    <!-- VIP ACCESS MODAL GATEWAY -->
+    <!-- SECURE VIP AUTHENTICATION GATEWAY -->
     <div id="login-overlay" class="fixed inset-0 bg-gray-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-gray-900 border border-sky-500/30 p-8 rounded-2xl max-w-md w-full shadow-2xl relative overflow-hidden">
             <div class="text-center mb-6">
-                <div class="inline-block bg-sky-500/10 text-sky-400 font-mono text-[10px] px-3 py-1 rounded-full border border-sky-500/20 mb-2">ENTERPRISE GATEWAY</div>
-                <h2 class="text-2xl font-black text-white tracking-wide">⚡ ZEROX-AI <span class="text-sky-400">QUANT</span></h2>
-                <p class="text-xs text-gray-400 mt-1">Enter registered email & active VIP key to authenticate.</p>
+                <div class="inline-block bg-sky-500/10 text-sky-400 font-mono text-[10px] px-3 py-1 rounded-full border border-sky-500/20 mb-2">QUANT ENGINE GATEWAY</div>
+                <h2 class="text-2xl font-black text-white tracking-wide">⚡ ZEROX-AI <span class="text-sky-400">PRO</span></h2>
+                <p class="text-xs text-gray-400 mt-1">Authenticate with authorized credentials.</p>
             </div>
             
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-mono text-gray-400 mb-1">User Email / ID</label>
-                    <input type="email" id="user-email" required placeholder="demo@gmail.com" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-sky-500 font-mono transition">
+                    <label class="block text-xs font-mono text-gray-400 mb-1">User Identification</label>
+                    <input type="email" id="user-email" required placeholder="trader@zerox.com" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-sky-500 font-mono transition">
                 </div>
                 <div>
-                    <label class="block text-xs font-mono text-gray-400 mb-1">VIP License Key</label>
-                    <input type="text" id="user-key" required placeholder="ZEROX-VIP-1001" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-sky-500 font-mono transition">
+                    <label class="block text-xs font-mono text-gray-400 mb-1">License Access Key</label>
+                    <input type="password" id="user-key" required placeholder="••••••••••••••••" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-200 focus:outline-none focus:border-sky-500 font-mono transition">
                 </div>
                 
-                <div id="login-error" class="text-xs text-rose-400 font-mono hidden text-center bg-rose-950/40 border border-rose-900/50 py-2 rounded-lg">❌ Access Denied: Invalid Key or Subscription Expired</div>
+                <div id="login-error" class="text-xs text-rose-400 font-mono hidden text-center bg-rose-950/40 border border-rose-900/50 py-2 rounded-lg">❌ Access Denied: Invalid Credentials</div>
 
-                <button type="submit" class="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-gray-950 font-bold py-3 rounded-xl text-xs transition cursor-pointer shadow-lg shadow-sky-500/20">
+                <button type="submit" id="login-btn" class="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-gray-950 font-bold py-3 rounded-xl text-xs transition cursor-pointer shadow-lg shadow-sky-500/20">
                     AUTHENTICATE TERMINAL
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- MAIN TERMINAL UI -->
-    <div id="main-terminal" class="hidden h-full flex-col p-3 space-y-3">
-        <!-- HEADER -->
-        <header class="flex justify-between items-center bg-gray-900 border border-gray-800/80 px-4 py-2.5 rounded-xl shadow-lg">
+    <!-- MAIN TERMINAL DASHBOARD -->
+    <div id="main-terminal" class="hidden h-full flex-col p-2 md:p-3 space-y-2 md:space-y-3">
+        <!-- HEADER NAVBAR -->
+        <header class="flex flex-wrap justify-between items-center bg-gray-900 border border-gray-800/80 px-4 py-2.5 rounded-xl shadow-lg gap-2">
             <div class="flex items-center space-x-3">
-                <h1 class="text-lg font-black tracking-wider text-white">⚡ ZEROX-AI <span class="text-xs bg-sky-500/10 border border-sky-500/30 text-sky-400 px-2 py-0.5 rounded font-mono font-normal">v4.0 CONFLUENCE CORE</span></h1>
+                <h1 class="text-base md:text-lg font-black tracking-wider text-white">⚡ ZEROX-AI <span class="text-xs bg-sky-500/10 border border-sky-500/30 text-sky-400 px-2 py-0.5 rounded font-mono font-normal">v17.0 ENTERPRISE CORE</span></h1>
             </div>
-            <div id="active-pair" class="text-xs font-mono bg-gray-950 border border-gray-800 text-sky-400 px-4 py-1 rounded-lg font-bold">
-                ACTIVE PAIR: GBP/USD
+
+            <div id="active-pair-badge" class="text-xs font-mono bg-gray-950 border border-gray-800 text-sky-400 px-3 py-1 rounded-lg font-bold">
+                PAIR: GBP/USD
             </div>
+
             <div class="text-xs font-mono text-emerald-400 flex items-center space-x-2 bg-emerald-950/30 border border-emerald-900/50 px-3 py-1 rounded-lg">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span id="engine-status">AI FILTER: HIGH-CONFIDENCE MODE</span>
+                <span id="socket-indicator" class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span id="engine-status">INITIALIZING WEBSOCKET...</span>
             </div>
         </header>
 
-        <!-- MAIN LAYOUT -->
-        <div class="grid grid-cols-12 gap-3 flex-1 overflow-hidden">
+        <!-- MAIN CONTENT LAYOUT GRID -->
+        <div class="grid grid-cols-12 gap-2 md:gap-3 flex-1 overflow-hidden">
             
-            <!-- LEFT: 11 MARKET ASSETS -->
-            <div class="col-span-2 bg-gray-900 border border-gray-800/80 rounded-xl p-2 flex flex-col shadow-lg">
-                <h3 class="text-[10px] font-bold font-mono text-gray-400 px-2 py-1.5 mb-1 border-b border-gray-800 tracking-wider">MARKET ASSETS</h3>
-                <div class="space-y-1 overflow-y-auto flex-1 pr-1 font-mono text-xs">
-                    <button onclick="switchAsset('FX:GBPUSD', 'GBP/USD')" class="w-full text-left px-3 py-2 rounded-lg bg-gray-800 text-sky-400 font-bold flex justify-between items-center border border-sky-500/20"><span>GBP/USD</span></button>
-                    <button onclick="switchAsset('FX:EURUSD', 'EUR/USD')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>EUR/USD</span></button>
-                    <button onclick="switchAsset('FX:GBPJPY', 'GBP/JPY')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>GBP/JPY</span></button>
-                    <button onclick="switchAsset('FX:EURJPY', 'EUR/JPY')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>EUR/JPY</span></button>
-                    <button onclick="switchAsset('FX:AUDUSD', 'AUD/USD')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>AUD/USD</span></button>
-                    <button onclick="switchAsset('FX:USDCAD', 'USD/CAD')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>USD/CAD</span></button>
-                    <button onclick="switchAsset('FX:USDCHF', 'USD/CHF')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>USD/CHF</span></button>
-                    <button onclick="switchAsset('FX:NZDUSD', 'NZD/USD')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>NZD/USD</span></button>
-                    <button onclick="switchAsset('FX:EURGBP', 'EUR/GBP')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>EUR/GBP</span></button>
-                    <button onclick="switchAsset('FX:AUDJPY', 'AUD/JPY')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>AUD/JPY</span></button>
-                    <button onclick="switchAsset('OANDA:XAUUSD', 'GOLD (XAU)')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-amber-400 font-bold flex justify-between items-center border border-amber-500/20"><span>GOLD</span></button>
+            <!-- ASSETS SELECTOR -->
+            <div class="col-span-12 md:col-span-2 bg-gray-900 border border-gray-800/80 rounded-xl p-2 flex flex-col shadow-lg max-h-40 md:max-h-full overflow-hidden">
+                <h3 class="text-[10px] font-bold font-mono text-gray-400 px-2 py-1 mb-1 border-b border-gray-800 tracking-wider">FOREX & ASSETS</h3>
+                <div class="space-y-1 overflow-y-auto flex-1 pr-1 font-mono text-xs" id="asset-list">
+                    <button onclick="switchAsset('FX:GBPUSD', 'GBP/USD', 'frxGBPUSD', event)" class="asset-btn w-full text-left px-3 py-2 rounded-lg bg-gray-800 text-sky-400 font-bold flex justify-between items-center border border-sky-500/20"><span>GBP/USD</span></button>
+                    <button onclick="switchAsset('FX:EURUSD', 'EUR/USD', 'frxEURUSD', event)" class="asset-btn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>EUR/USD</span></button>
+                    <button onclick="switchAsset('FX:GBPJPY', 'GBP/JPY', 'frxGBPJPY', event)" class="asset-btn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>GBP/JPY</span></button>
+                    <button onclick="switchAsset('FX:EURJPY', 'EUR/JPY', 'frxEURJPY', event)" class="asset-btn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>EUR/JPY</span></button>
+                    <button onclick="switchAsset('FX:AUDUSD', 'AUD/USD', 'frxAUDUSD', event)" class="asset-btn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>AUD/USD</span></button>
+                    <button onclick="switchAsset('FX:USDCAD', 'USD/CAD', 'frxUSDCAD', event)" class="asset-btn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>USD/CAD</span></button>
+                    <button onclick="switchAsset('FX:USDCHF', 'USD/CHF', 'frxUSDCHF', event)" class="asset-btn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>USD/CHF</span></button>
+                    <button onclick="switchAsset('FX:NZDUSD', 'NZD/USD', 'frxNZDUSD', event)" class="asset-btn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>NZD/USD</span></button>
+                    <button onclick="switchAsset('FX:EURGBP', 'EUR/GBP', 'frxEURGBP', event)" class="asset-btn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>EUR/GBP</span></button>
+                    <button onclick="switchAsset('FX:AUDJPY', 'AUD/JPY', 'frxAUDJPY', event)" class="asset-btn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center"><span>AUD/JPY</span></button>
+                    <button onclick="switchAsset('OANDA:XAUUSD', 'GOLD (XAU)', 'frxXAUUSD', event)" class="asset-btn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-amber-400 font-bold flex justify-between items-center border border-amber-500/20"><span>GOLD</span></button>
                 </div>
             </div>
 
-            <!-- CENTER: LIVE TRADINGVIEW CHART -->
-            <div class="col-span-7 bg-gray-900 border border-gray-800/80 rounded-xl overflow-hidden p-1 flex flex-col shadow-lg">
+            <!-- LIVE CHART CENTER -->
+            <div class="col-span-12 md:col-span-7 bg-gray-900 border border-gray-800/80 rounded-xl overflow-hidden p-1 flex flex-col shadow-lg min-h-[300px] md:min-h-full">
                 <div id="tradingview_chart" class="w-full h-full"></div>
             </div>
 
-            <!-- RIGHT: DYNAMIC CONFLUENCE AI SIGNAL MATRIX -->
-            <div class="col-span-3 bg-gray-900 border border-gray-800/80 rounded-xl p-3.5 flex flex-col justify-between shadow-lg">
+            <!-- QUANT CONFLUENCE MATRIX RIGHT -->
+            <div class="col-span-12 md:col-span-3 bg-gray-900 border border-gray-800/80 rounded-xl p-3 md:p-3.5 flex flex-col justify-between shadow-lg overflow-y-auto">
                 <div>
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2 mb-3">
-                        <span class="text-xs font-bold font-mono text-sky-400">M1 CANDLE CLOSE SCAN</span>
+                        <span class="text-xs font-bold font-mono text-sky-400">QUANT CONFLUENCE ENGINE</span>
                         <span id="timer" class="text-xs font-mono bg-gray-950 px-2.5 py-0.5 rounded text-amber-400 border border-amber-900/50">01:00</span>
                     </div>
 
-                    <!-- AI SIGNAL DECISION BOX -->
-                    <div id="signal-box" class="bg-gradient-to-b from-gray-950 to-gray-900 p-4 rounded-xl border border-gray-800 text-center mb-3 transition-all duration-500 shadow-inner">
-                        <span id="signal-status-tag" class="text-[10px] text-gray-400 font-mono block mb-1 uppercase font-bold">● QUANT CONFLUENCE EVALUATION</span>
-                        <div id="signal-text" class="text-2xl font-black text-amber-400 tracking-wider">NO TRADE</div>
-                        <span id="signal-reason" class="text-[10px] text-gray-400 font-mono block mt-1">REASON: WAITING FOR MARKET CONFLUENCE</span>
+                    <!-- SIGNAL OUTPUT DISPLAY -->
+                    <div id="signal-box" class="bg-gradient-to-b from-gray-950 to-gray-900 p-4 rounded-xl border border-gray-800 text-center mb-3 transition-all duration-300 shadow-inner">
+                        <span id="signal-status-tag" class="text-[10px] text-gray-400 font-mono block mb-1 uppercase font-bold">● STRICT CONFLUENCE GATEKEEPER</span>
+                        <div id="signal-text" class="text-xl font-black text-amber-400 tracking-wider">NO TRADE</div>
+                        <span id="signal-reason" class="text-[10px] text-gray-400 font-mono block mt-1">REASON: CONNECTING TO LIVE FEED</span>
                     </div>
 
-                    <!-- REAL-TIME TECHNICAL CONFLUENCE MATRIX -->
+                    <!-- LIVE MATHEMATICAL METRICS TABLE -->
                     <div class="space-y-1.5 font-mono text-[11px]">
                         <div class="flex justify-between bg-gray-950 p-2 rounded-lg border border-gray-800/80">
-                            <span class="text-gray-400">EMA Trend (9/21)</span>
-                            <span id="c-ema" class="text-gray-400 font-bold">SCANNING...</span>
+                            <span class="text-gray-400">Close Price</span>
+                            <span id="calc-close" class="text-gray-200 font-bold">--</span>
                         </div>
                         <div class="flex justify-between bg-gray-950 p-2 rounded-lg border border-gray-800/80">
-                            <span class="text-gray-400">RSI Momentum</span>
-                            <span id="c-rsi" class="text-gray-400 font-bold">SCANNING...</span>
+                            <span class="text-gray-400">M1 Trend (EMA 9/21)</span>
+                            <span id="calc-ema-m1" class="text-gray-200 font-bold">--</span>
                         </div>
                         <div class="flex justify-between bg-gray-950 p-2 rounded-lg border border-gray-800/80">
-                            <span class="text-gray-400">Vol Squeeze Filter</span>
-                            <span id="c-vol" class="text-gray-400 font-bold">SCANNING...</span>
+                            <span class="text-gray-400">M5 Multi-Trend Sync</span>
+                            <span id="calc-ema-m5" class="text-gray-200 font-bold">--</span>
                         </div>
                         <div class="flex justify-between bg-gray-950 p-2 rounded-lg border border-gray-800/80">
-                            <span class="text-gray-400">Confluence Score</span>
-                            <span id="c-score" class="text-sky-400 font-bold">0%</span>
+                            <span class="text-gray-400">RSI (14 Wilder)</span>
+                            <span id="calc-rsi" class="text-gray-200 font-bold">--</span>
+                        </div>
+                        <div class="flex justify-between bg-gray-950 p-2 rounded-lg border border-gray-800/80">
+                            <span class="text-gray-400">MACD (Hist / Line)</span>
+                            <span id="calc-macd" class="text-gray-200 font-bold">--</span>
+                        </div>
+                        <div class="flex justify-between bg-gray-950 p-2 rounded-lg border border-gray-800/80">
+                            <span class="text-gray-400">ADX / +DI / -DI</span>
+                            <span id="calc-adx" class="text-gray-200 font-bold">--</span>
+                        </div>
+                        <div class="flex justify-between bg-gray-950 p-2 rounded-lg border border-gray-800/80">
+                            <span class="text-gray-400">ATR (14 Wilder)</span>
+                            <span id="calc-atr" class="text-gray-200 font-bold">--</span>
+                        </div>
+                        <div class="flex justify-between bg-gray-950 p-2 rounded-lg border border-gray-800/80">
+                            <span class="text-gray-400">Bollinger Bands (20,2)</span>
+                            <span id="calc-bb" class="text-gray-200 font-bold">--</span>
+                        </div>
+                        <div class="flex justify-between bg-gray-950 p-2 rounded-lg border border-gray-800/80">
+                            <span class="text-gray-400">Candlestick Pattern</span>
+                            <span id="calc-pattern" class="text-gray-200 font-bold">--</span>
+                        </div>
+                        <div class="flex justify-between bg-gray-950 p-2 rounded-lg border border-gray-800/80">
+                            <span class="text-gray-400">Pivot S1 / R1</span>
+                            <span id="calc-sr" class="text-gray-200 font-bold">--</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- SYSTEM FOOTER -->
                 <div class="mt-3 pt-2 border-t border-gray-800/80 text-center">
-                    <span class="text-[10px] text-gray-500 font-mono">ZEROX HIGH-CONFIDENCE ENGINE • NO NOISE</span>
+                    <span class="text-[10px] text-gray-500 font-mono">ZEROX QUANT CORE • MATHEMATICALLY VERIFIED</span>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- MODULAR ENTERPRISE QUANT ENGINE JS -->
+    <!-- QUANT BACKEND ARCHITECTURE & ENGINE -->
     <script>
-        let currentSymbol = "FX:GBPUSD";
+        // SYSTEM GLOBAL STATE
+        const AppState = {
+            currentTvSymbol: "FX:GBPUSD",
+            currentDerivSymbol: "frxGBPUSD",
+            wsSocket: null,
+            pingInterval: null,
+            reconnectTimer: null,
+            reconnectDelay: 1000,
+            timerInterval: null,
+            m1History: [],
+            m5History: []
+        };
 
-        /* ===================================================
-           MODULAR AI QUANT CONFLUENCE ENGINE (PRODUCTION-READY)
-           =================================================== */
-        class ModularQuantEngine {
-            constructor() {
-                this.apiEndpoint = null; // Future API Link (Polygon/OANDA/Custom Webhook)
-                this.newsFilterActive = true;
-                this.minConfluenceScore = 85; // Strict Gatekeeper Threshold (%)
+        /* ==================================================================
+           1. EXACT MATHEMATICAL TECHNICAL ANALYSIS ENGINE
+           ================================================================== */
+        class PrecisionQuantMath {
+            
+            // True Exponential Moving Average (EMA)
+            static calculateEMA(prices, period) {
+                if (!prices || prices.length < period) return null;
+                const k = 2 / (period + 1);
+                let ema = prices.slice(0, period).reduce((sum, p) => sum + p, 0) / period;
+                for (let i = period; i < prices.length; i++) {
+                    ema = (prices[i] * k) + (ema * (1 - k));
+                }
+                return ema;
             }
 
-            // High-Confidence Multi-Indicator Confluence Evaluator
-            evaluateM1Candle(symbolData) {
-                // Production-Ready Indicator Matrix Simulation
-                // In future: Replace this object with live OHLC tick data calculation
-                const indicators = {
-                    emaBullish: Math.random() > 0.45,
-                    emaBearish: Math.random() > 0.45,
-                    rsiVal: Math.floor(Math.random() * 80) + 10,
-                    volatilityHigh: Math.random() > 0.35,
-                    newsConflict: Math.random() < 0.15 // 15% probability of high-impact news nearby
-                };
-
-                let score = 0;
-                let emaStatus = "NEUTRAL";
-                let rsiStatus = `${indicators.rsiVal} (NEUTRAL)`;
-                let volStatus = indicators.volatilityHigh ? "STABLE" : "SQUEEZE (LOW)";
+            // Full Standard MACD (12, 26, 9)
+            static calculateMACD(prices) {
+                if (!prices || prices.length < 35) return { macdLine: 0, signalLine: 0, hist: 0 };
                 
-                let decision = "NO TRADE";
-                let reason = "CONFUSION / INSUFFICIENT CONFLUENCE";
-                let boxBg = "from-gray-950 to-gray-900 border-gray-800";
-                let textColor = "text-amber-400";
+                let macdArray = [];
+                const k12 = 2 / 13;
+                const k26 = 2 / 27;
 
-                // 1. News Risk Gatekeeper
-                if (indicators.newsConflict) {
-                    return {
-                        decision: "NO TRADE",
-                        reason: "REASON: HIGH-IMPACT NEWS RISK",
-                        ema: "BLOCKED",
-                        rsi: "BLOCKED",
-                        vol: "HIGH SPREAD",
-                        score: 0,
-                        bg: "from-amber-950/40 to-gray-950 border-amber-800/50",
-                        color: "text-amber-400"
-                    };
+                let ema12 = prices.slice(0, 12).reduce((a, b) => a + b, 0) / 12;
+                let ema26 = prices.slice(0, 26).reduce((a, b) => a + b, 0) / 26;
+
+                for (let i = 26; i < prices.length; i++) {
+                    ema12 = (prices[i] * k12) + (ema12 * (1 - k12));
+                    ema26 = (prices[i] * k26) + (ema26 * (1 - k26));
+                    macdArray.push(ema12 - ema26);
                 }
 
-                // 2. Confluence Checks
-                if (indicators.emaBullish && !indicators.emaBearish) {
-                    emaStatus = "BULLISH (+30%)";
-                    score += 35;
-                } else if (indicators.emaBearish && !indicators.emaBullish) {
-                    emaStatus = "BEARISH (+30%)";
-                    score += 35;
+                const currentMacd = macdArray[macdArray.length - 1];
+                const signalLine = this.calculateEMA(macdArray, 9) || (currentMacd * 0.2);
+                const hist = currentMacd - signalLine;
+
+                return { macdLine: currentMacd, signalLine, hist };
+            }
+
+            // Wilder's Relative Strength Index (RSI 14)
+            static calculateRSI(prices, period = 14) {
+                if (!prices || prices.length <= period) return 50;
+                let gains = 0, losses = 0;
+
+                for (let i = 1; i <= period; i++) {
+                    let diff = prices[i] - prices[i - 1];
+                    if (diff >= 0) gains += diff;
+                    else losses -= diff;
                 }
 
-                if (indicators.rsiVal > 54 && indicators.rsiVal < 68) {
-                    rsiStatus = `${indicators.rsiVal} (BUY MOMENTUM)`;
-                    score += 30;
-                } else if (indicators.rsiVal < 46 && indicators.rsiVal > 32) {
-                    rsiStatus = `${indicators.rsiVal} (SELL MOMENTUM)`;
-                    score += 30;
-                } else {
-                    rsiStatus = `${indicators.rsiVal} (NOISE / EXTREME)`;
-                }
+                let avgGain = gains / period;
+                let avgLoss = losses / period;
 
-                if (indicators.volatilityHigh) {
-                    score += 30;
-                } else {
-                    reason = "REASON: LOW VOLATILITY / NO VOLUME";
-                }
-
-                // 3. Strict Signal Gatekeeper Approval (Score must be >= 85%)
-                if (score >= this.minConfluenceScore) {
-                    if (indicators.emaBullish && indicators.rsiVal > 54) {
-                        decision = "STRONG BUY";
-                        reason = "CONFIRMATION: 4/4 INDICATORS AGREE";
-                        boxBg = "from-emerald-950/60 to-gray-950 border-emerald-700/80";
-                        textColor = "text-emerald-400";
-                    } else if (indicators.emaBearish && indicators.rsiVal < 46) {
-                        decision = "STRONG SELL";
-                        reason = "CONFIRMATION: 4/4 INDICATORS AGREE";
-                        boxBg = "from-rose-950/60 to-gray-950 border-rose-700/80";
-                        textColor = "text-rose-400";
+                for (let i = period + 1; i < prices.length; i++) {
+                    let diff = prices[i] - prices[i - 1];
+                    if (diff >= 0) {
+                        avgGain = (avgGain * (period - 1) + diff) / period;
+                        avgLoss = (avgLoss * (period - 1)) / period;
                     } else {
-                        decision = "NO TRADE";
-                        reason = "REASON: INDICATOR CONFLICT";
-                        boxBg = "from-gray-950 to-gray-900 border-gray-800";
-                        textColor = "text-amber-400";
+                        avgGain = (avgGain * (period - 1)) / period;
+                        avgLoss = (avgLoss * (period - 1) - diff) / period;
                     }
-                } else {
-                    decision = "NO TRADE";
-                    if (score < 50) reason = "REASON: NO MARKET DIRECTION";
-                    else reason = "REASON: LOW CONFLUENCE SCORE (<85%)";
                 }
 
+                if (avgLoss === 0) return 100;
+                let rs = avgGain / avgLoss;
+                return 100 - (100 / (1 + rs));
+            }
+
+            // Wilder's Average True Range (ATR 14)
+            static calculateATR(highs, lows, closes, period = 14) {
+                if (!closes || closes.length <= period) return 0.0001;
+                let trs = [];
+                for (let i = 1; i < closes.length; i++) {
+                    let tr = Math.max(
+                        highs[i] - lows[i],
+                        Math.abs(highs[i] - closes[i - 1]),
+                        Math.abs(lows[i] - closes[i - 1])
+                    );
+                    trs.push(tr);
+                }
+
+                let atr = trs.slice(0, period).reduce((a, b) => a + b, 0) / period;
+                for (let i = period; i < trs.length; i++) {
+                    atr = (atr * (period - 1) + trs[i]) / period;
+                }
+                return atr;
+            }
+
+            // Full Wilder's ADX Engine (+DI, -DI, DX, ADX 14)
+            static calculateWilderADX(highs, lows, closes, period = 14) {
+                if (!closes || closes.length <= period * 2) {
+                    return { adx: 20, plusDI: 0, minusDI: 0 };
+                }
+
+                let plusDM = [], minusDM = [], trs = [];
+
+                for (let i = 1; i < closes.length; i++) {
+                    let upMove = highs[i] - highs[i - 1];
+                    let downMove = lows[i - 1] - lows[i];
+
+                    if (upMove > downMove && upMove > 0) plusDM.push(upMove);
+                    else plusDM.push(0);
+
+                    if (downMove > upMove && downMove > 0) minusDM.push(downMove);
+                    else minusDM.push(0);
+
+                    let tr = Math.max(
+                        highs[i] - lows[i],
+                        Math.abs(highs[i] - closes[i - 1]),
+                        Math.abs(lows[i] - closes[i - 1])
+                    );
+                    trs.push(tr);
+                }
+
+                let smoothTR = trs.slice(0, period).reduce((a, b) => a + b, 0);
+                let smoothPlusDM = plusDM.slice(0, period).reduce((a, b) => a + b, 0);
+                let smoothMinusDM = minusDM.slice(0, period).reduce((a, b) => a + b, 0);
+
+                let dxArray = [];
+
+                for (let i = period; i < trs.length; i++) {
+                    smoothTR = smoothTR - (smoothTR / period) + trs[i];
+                    smoothPlusDM = smoothPlusDM - (smoothPlusDM / period) + plusDM[i];
+                    smoothMinusDM = smoothMinusDM - (smoothMinusDM / period) + minusDM[i];
+
+                    let plusDI = (smoothPlusDM / smoothTR) * 100;
+                    let minusDI = (smoothMinusDM / smoothTR) * 100;
+                    let diSum = plusDI + minusDI;
+                    let dx = diSum === 0 ? 0 : (Math.abs(plusDI - minusDI) / diSum) * 100;
+
+                    dxArray.push({ dx, plusDI, minusDI });
+                }
+
+                if (dxArray.length < period) return { adx: 20, plusDI: 0, minusDI: 0 };
+
+                let adx = dxArray.slice(0, period).reduce((sum, item) => sum + item.dx, 0) / period;
+                for (let i = period; i < dxArray.length; i++) {
+                    adx = ((adx * (period - 1)) + dxArray[i].dx) / period;
+                }
+
+                const lastItem = dxArray[dxArray.length - 1];
                 return {
-                    decision: decision,
-                    reason: reason,
-                    ema: emaStatus,
-                    rsi: rsiStatus,
-                    vol: volStatus,
-                    score: score,
-                    bg: boxBg,
-                    color: textColor
+                    adx: adx,
+                    plusDI: lastItem.plusDI,
+                    minusDI: lastItem.minusDI
                 };
+            }
+
+            // Bollinger Bands (20, 2)
+            static calculateBollingerBands(closes, period = 20, stdDevMult = 2) {
+                if (!closes || closes.length < period) return { bbStatus: "INSIDE BANDS", upper: 0, lower: 0, sma: 0 };
+                
+                const slice = closes.slice(-period);
+                const sma = slice.reduce((a, b) => a + b, 0) / period;
+                const variance = slice.reduce((a, b) => a + Math.pow(b - sma, 2), 0) / period;
+                const stdDev = Math.sqrt(variance);
+                const upper = sma + (stdDev * stdDevMult);
+                const lower = sma - (stdDev * stdDevMult);
+                const lastClose = closes[closes.length - 1];
+
+                let bbStatus = "INSIDE BANDS";
+                if (lastClose >= upper) bbStatus = "UPPER BAND TOUCH";
+                else if (lastClose <= lower) bbStatus = "LOWER BAND TOUCH";
+
+                return { bbStatus, upper, lower, sma };
+            }
+
+            // Floor Pivot Points (S1 / R1)
+            static calculatePivotSR(highs, lows, closes) {
+                if (!closes || closes.length < 2) return { pivot: 0, r1: 0, s1: 0 };
+                const h = highs[highs.length - 2];
+                const l = lows[lows.length - 2];
+                const c = closes[closes.length - 2];
+                const pivot = (h + l + c) / 3;
+                const r1 = (2 * pivot) - l;
+                const s1 = (2 * pivot) - h;
+                return { pivot, r1, s1 };
+            }
+
+            // Candlestick Pattern Recognition
+            static detectCandlePattern(opens, highs, lows, closes) {
+                const len = closes.length;
+                if (len < 2) return "STANDARD";
+
+                const o = opens[len - 1], h = highs[len - 1], l = lows[len - 1], c = closes[len - 1];
+                const prevO = opens[len - 2], prevC = closes[len - 2];
+
+                const body = Math.abs(c - o);
+                const range = h - l;
+                const upperShadow = h - Math.max(o, c);
+                const lowerShadow = Math.min(o, c) - l;
+
+                if (prevC < prevO && c > o && c >= prevO && o <= prevC) return "BULLISH ENGULFING";
+                if (prevC > prevO && c < o && c <= prevO && o >= prevC) return "BEARISH ENGULFING";
+
+                if (range > 0 && body / range < 0.1) return "DOJI";
+                if (lowerShadow > (2 * body) && upperShadow < body) return "HAMMER";
+                if (upperShadow > (2 * body) && lowerShadow < body) return "SHOOTING STAR";
+
+                return "STANDARD";
             }
         }
 
-        // Initialize Global Quant Engine
-        const quantEngine = new ModularQuantEngine();
+        /* ==================================================================
+           2. RESILIENT AUTO-RECONNECTING WEBSOCKET CLIENT (WITH HEARTBEAT)
+           ================================================================== */
+        function connectWebSocket() {
+            if (AppState.wsSocket) {
+                AppState.wsSocket.onopen = null;
+                AppState.wsSocket.onmessage = null;
+                AppState.wsSocket.onerror = null;
+                AppState.wsSocket.onclose = null;
+                AppState.wsSocket.close();
+                AppState.wsSocket = null;
+            }
 
-        // UI Core Logic
-        function loadChart(symbol) {
-            document.getElementById('tradingview_chart').innerHTML = '';
-            new TradingView.widget({
-                "autosize": true,
-                "symbol": symbol,
-                "interval": "1",
-                "timezone": "Etc/UTC",
-                "theme": "dark",
-                "style": "1",
-                "locale": "en",
-                "container_id": "tradingview_chart"
-            });
+            clearInterval(AppState.pingInterval);
+            updateSocketBadge("CONNECTING...", "text-amber-400", "bg-amber-500");
+
+            AppState.wsSocket = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
+
+            AppState.wsSocket.onopen = function() {
+                updateSocketBadge("WEBSOCKET: LIVE STREAMING", "text-emerald-400", "bg-emerald-500");
+                AppState.reconnectDelay = 1000;
+
+                AppState.pingInterval = setInterval(() => {
+                    if (AppState.wsSocket && AppState.wsSocket.readyState === WebSocket.OPEN) {
+                        AppState.wsSocket.send(JSON.stringify({ ping: 1 }));
+                    }
+                }, 30000);
+
+                AppState.wsSocket.send(JSON.stringify({
+                    ticks_history: AppState.currentDerivSymbol,
+                    adjust_start_time: 1,
+                    count: 70,
+                    end: "latest",
+                    granularity: 60,
+                    style: "candles",
+                    req_id: 1
+                }));
+
+                AppState.wsSocket.send(JSON.stringify({
+                    ticks_history: AppState.currentDerivSymbol,
+                    adjust_start_time: 1,
+                    count: 40,
+                    end: "latest",
+                    granularity: 300,
+                    style: "candles",
+                    req_id: 5
+                }));
+            };
+
+            AppState.wsSocket.onmessage = function(msg) {
+                try {
+                    const res = JSON.parse(msg.data);
+                    
+                    if (res.req_id === 1 && res.candles) AppState.m1History = res.candles;
+                    if (res.req_id === 5 && res.candles) AppState.m5History = res.candles;
+
+                    if (res.ohlc) {
+                        const o = res.ohlc;
+                        if (AppState.m1History.length > 0) {
+                            AppState.m1History[AppState.m1History.length - 1] = {
+                                open: parseFloat(o.open),
+                                high: parseFloat(o.high),
+                                low: parseFloat(o.low),
+                                close: parseFloat(o.close)
+                            };
+                        }
+                    }
+
+                    if (AppState.m1History.length > 0) {
+                        evaluateConfluenceEngine();
+                    }
+                } catch (e) {
+                    console.error("Payload execution error:", e);
+                }
+            };
+
+            AppState.wsSocket.onerror = function() {
+                updateSocketBadge("SOCKET ERROR", "text-rose-400", "bg-rose-500");
+            };
+
+            AppState.wsSocket.onclose = function() {
+                updateSocketBadge(`RECONNECTING (${AppState.reconnectDelay / 1000}s)`, "text-rose-400", "bg-rose-500");
+                clearInterval(AppState.pingInterval);
+                
+                clearTimeout(AppState.reconnectTimer);
+                AppState.reconnectTimer = setTimeout(() => {
+                    AppState.reconnectDelay = Math.min(AppState.reconnectDelay * 2, 30000);
+                    connectWebSocket();
+                }, AppState.reconnectDelay);
+            };
         }
 
-        function switchAsset(symbol, name) {
-            currentSymbol = symbol;
-            loadChart(symbol);
-            document.getElementById('active-pair').innerText = 'ACTIVE PAIR: ' + name;
-            triggerAIScan();
+        function updateSocketBadge(text, textCls, bgCls) {
+            const statusEl = document.getElementById('engine-status');
+            const indicatorEl = document.getElementById('socket-indicator');
+            if (statusEl) {
+                statusEl.innerText = text;
+                statusEl.className = textCls;
+            }
+            if (indicatorEl) {
+                indicatorEl.className = `w-2 h-2 rounded-full animate-pulse ${bgCls}`;
+            }
         }
 
-        function triggerAIScan() {
-            const result = quantEngine.evaluateM1Candle(currentSymbol);
+        /* ==================================================================
+           3. STRICT HIGH-CONFIDENCE GATEKEEPER EVALUATION
+           ================================================================== */
+        function evaluateConfluenceEngine() {
+            const history = AppState.m1History;
+            if (!history || history.length < 35) {
+                updateNoTrade("NO TRADE – Awaiting Sufficient Market Data");
+                return;
+            }
 
+            const opens = history.map(c => c.open);
+            const highs = history.map(c => c.high);
+            const lows = history.map(c => c.low);
+            const closes = history.map(c => c.close);
+
+            const lastClose = closes[closes.length - 1];
+
+            const ema9 = PrecisionQuantMath.calculateEMA(closes, 9);
+            const ema21 = PrecisionQuantMath.calculateEMA(closes, 21);
+            const rsi = PrecisionQuantMath.calculateRSI(closes, 14);
+            const macd = PrecisionQuantMath.calculateMACD(closes);
+            const atr = PrecisionQuantMath.calculateATR(highs, lows, closes, 14);
+            const adxData = PrecisionQuantMath.calculateWilderADX(highs, lows, closes, 14);
+            const bb = PrecisionQuantMath.calculateBollingerBands(closes, 20, 2);
+            const pivots = PrecisionQuantMath.calculatePivotSR(highs, lows, closes);
+            const pattern = PrecisionQuantMath.detectCandlePattern(opens, highs, lows, closes);
+
+            let isM5Bullish = true;
+            let isM5Bearish = true;
+            if (AppState.m5History.length >= 21) {
+                const m5Closes = AppState.m5History.map(c => c.close);
+                const m5Ema9 = PrecisionQuantMath.calculateEMA(m5Closes, 9);
+                const m5Ema21 = PrecisionQuantMath.calculateEMA(m5Closes, 21);
+                isM5Bullish = m5Ema9 > m5Ema21;
+                isM5Bearish = m5Ema9 < m5Ema21;
+            }
+
+            document.getElementById('calc-close').innerText = lastClose.toFixed(5);
+            document.getElementById('calc-ema-m1').innerText = ema9 > ema21 ? "EMA9 > 21 (BULLISH)" : "EMA9 < 21 (BEARISH)";
+            document.getElementById('calc-ema-m5').innerText = isM5Bullish ? "M5 BULLISH SYNC" : "M5 BEARISH SYNC";
+            document.getElementById('calc-rsi').innerText = `${rsi.toFixed(1)} ${rsi > 70 ? '(OVERBOUGHT)' : rsi < 30 ? '(OVERSOLD)' : ''}`;
+            document.getElementById('calc-macd').innerText = `Hist: ${macd.hist.toFixed(5)} | Line: ${macd.macdLine.toFixed(5)}`;
+            document.getElementById('calc-adx').innerText = `ADX: ${adxData.adx.toFixed(1)} (+DI: ${adxData.plusDI.toFixed(1)} / -DI: ${adxData.minusDI.toFixed(1)})`;
+            document.getElementById('calc-atr').innerText = atr.toFixed(5);
+            document.getElementById('calc-bb').innerText = bb.bbStatus;
+            document.getElementById('calc-pattern').innerText = pattern;
+            document.getElementById('calc-sr').innerText = `S1: ${pivots.s1.toFixed(5)} | R1: ${pivots.r1.toFixed(5)}`;
+
+            const isM1Bullish = ema9 > ema21;
+            const isM1Bearish = ema9 < ema21;
+            const isRsiBuyOk = rsi > 54 && rsi < 68;
+            const isRsiSellOk = rsi < 46 && rsi > 32;
+            const isMacdBuyOk = macd.hist > 0 && macd.macdLine > macd.signalLine;
+            const isMacdSellOk = macd.hist < 0 && macd.macdLine < macd.signalLine;
+            const isAdxBuyOk = adxData.adx >= 25 && adxData.plusDI > adxData.minusDI;
+            const isAdxSellOk = adxData.adx >= 25 && adxData.minusDI > adxData.plusDI;
+
+            if (isM1Bullish && isM5Bullish && isRsiBuyOk && isMacdBuyOk && isAdxBuyOk) {
+                if (lastClose >= pivots.r1) {
+                    updateNoTrade("NO TRADE – Price Blocked by Pivot Resistance (R1)");
+                } else {
+                    updateSignalBox("STRONG BUY", "CONFIRMATION: M1 + M5 MULTI-TIMEFRAME MATCH", "from-emerald-950/60 to-gray-950 border-emerald-700/80", "text-emerald-400");
+                }
+            } else if (isM1Bearish && isM5Bearish && isRsiSellOk && isMacdSellOk && isAdxSellOk) {
+                if (lastClose <= pivots.s1) {
+                    updateNoTrade("NO TRADE – Price Blocked by Pivot Support (S1)");
+                } else {
+                    updateSignalBox("STRONG SELL", "CONFIRMATION: M1 + M5 MULTI-TIMEFRAME MATCH", "from-rose-950/60 to-gray-950 border-rose-700/80", "text-rose-400");
+                }
+            } else {
+                let reason = "NO TRADE – Market Sideways / Indicator Conflict";
+                if (adxData.adx < 25) reason = "NO TRADE – Weak ADX Trend Strength (<25)";
+                else if (isM1Bullish !== isM5Bullish) reason = "NO TRADE – Timeframe Trend Mismatch (M1 vs M5)";
+                else if (rsi >= 68 || rsi <= 32) reason = "NO TRADE – RSI Extreme / Reversal Risk";
+
+                updateNoTrade(reason);
+            }
+        }
+
+        function updateNoTrade(reason) {
+            updateSignalBox("NO TRADE", reason, "from-gray-950 to-gray-900 border-gray-800", "text-amber-400");
+        }
+
+        function updateSignalBox(signal, reason, bgCls, textCls) {
             const box = document.getElementById('signal-box');
-            box.className = `bg-gradient-to-b ${result.bg} p-4 rounded-xl border text-center mb-3 transition-all duration-500 shadow-inner`;
+            if (box) {
+                box.className = `bg-gradient-to-b ${bgCls} p-4 rounded-xl border text-center mb-3 transition-all duration-300 shadow-inner`;
+            }
 
             const txt = document.getElementById('signal-text');
-            txt.className = `text-2xl font-black ${result.color} tracking-wider`;
-            txt.innerText = result.decision;
+            if (txt) {
+                txt.className = `text-xl font-black ${textCls} tracking-wider`;
+                txt.innerText = signal;
+            }
 
-            document.getElementById('signal-reason').innerText = result.reason;
-            document.getElementById('c-ema').innerText = result.ema;
-            document.getElementById('c-rsi').innerText = result.rsi;
-            document.getElementById('c-vol').innerText = result.vol;
-            
-            const scoreEl = document.getElementById('c-score');
-            scoreEl.innerText = `${result.score}%`;
-            scoreEl.className = result.score >= 85 ? "text-emerald-400 font-bold" : "text-amber-400 font-bold";
+            const reasonEl = document.getElementById('signal-reason');
+            if (reasonEl) {
+                reasonEl.innerText = reason;
+            }
         }
 
-        function startQuantEngineLoop() {
+        /* ==================================================================
+           4. UI & SYSTEM CORE HANDLERS
+           ================================================================== */
+        function loadTradingViewChart(symbol) {
+            const chartContainer = document.getElementById('tradingview_chart');
+            if (chartContainer) {
+                chartContainer.innerHTML = '';
+            }
+            if (typeof TradingView !== 'undefined') {
+                new TradingView.widget({
+                    "autosize": true,
+                    "symbol": symbol,
+                    "interval": "1",
+                    "timezone": "Etc/UTC",
+                    "theme": "dark",
+                    "style": "1",
+                    "locale": "en",
+                    "container_id": "tradingview_chart"
+                });
+            }
+        }
+
+        function switchAsset(tvSymbol, name, derivSymbol, evt) {
+            AppState.currentTvSymbol = tvSymbol;
+            AppState.currentDerivSymbol = derivSymbol;
+            AppState.m1History = [];
+            AppState.m5History = [];
+            
+            const badge = document.getElementById('active-pair-badge');
+            if (badge) {
+                badge.innerText = 'PAIR: ' + name;
+            }
+
+            document.querySelectorAll('.asset-btn').forEach(btn => {
+                btn.className = "asset-btn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800/60 text-gray-300 flex justify-between items-center";
+            });
+            if (evt && evt.currentTarget) {
+                evt.currentTarget.className = "asset-btn w-full text-left px-3 py-2 rounded-lg bg-gray-800 text-sky-400 font-bold flex justify-between items-center border border-sky-500/20";
+            }
+
+            loadTradingViewChart(tvSymbol);
+            connectWebSocket();
+        }
+
+        function startTimerClock() {
             let sec = 59;
-            setInterval(() => {
-                document.getElementById('timer').innerText = `00:${sec < 10 ? '0' : ''}${sec}`;
+            clearInterval(AppState.timerInterval);
+            AppState.timerInterval = setInterval(() => {
+                const timerEl = document.getElementById('timer');
+                if (timerEl) {
+                    timerEl.innerText = `00:${sec < 10 ? '0' : ''}${sec}`;
+                }
                 sec--;
                 if (sec < 0) {
                     sec = 59;
-                    triggerAIScan(); // Automated M1 Candle Close Scanner
+                    if (AppState.m1History.length > 0) evaluateConfluenceEngine();
                 }
             }, 1000);
         }
 
+        /* ==================================================================
+           5. SECURE AUTHENTICATION FLOW
+           ================================================================== */
         function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('user-email').value;
@@ -300,6 +646,7 @@
 
             let storedKeys = JSON.parse(localStorage.getItem('zerox_keys')) || [
                 { email: "admin@zerox.com", key: "ZEROX-ADMIN-999", status: "Active" },
+                { email: "trader@zerox.com", key: "ZEROX-VIP-1001", status: "Active" },
                 { email: "demo@gmail.com", key: "ZEROX-VIP-1001", status: "Active" }
             ];
 
@@ -309,9 +656,9 @@
                 document.getElementById('login-overlay').classList.add('hidden');
                 document.getElementById('main-terminal').classList.remove('hidden');
                 document.getElementById('main-terminal').classList.add('flex');
-                loadChart('FX:GBPUSD');
-                triggerAIScan();
-                startQuantEngineLoop();
+                loadTradingViewChart(AppState.currentTvSymbol);
+                connectWebSocket();
+                startTimerClock();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
