@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZEROX-AI | Enterprise Quant Trading Engine</title>
+    <title>ZEROX-AI | Enterprise Quant Engine</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- TradingView Advanced Charting Widget -->
@@ -44,7 +44,7 @@
         <!-- HEADER NAVBAR -->
         <header class="flex flex-wrap justify-between items-center bg-gray-900 border border-gray-800/80 px-4 py-2.5 rounded-xl shadow-lg gap-2">
             <div class="flex items-center space-x-3">
-                <h1 class="text-base md:text-lg font-black tracking-wider text-white">⚡ ZEROX-AI <span class="text-xs bg-sky-500/10 border border-sky-500/30 text-sky-400 px-2 py-0.5 rounded font-mono font-normal">v17.0 ENTERPRISE CORE</span></h1>
+                <h1 class="text-base md:text-lg font-black tracking-wider text-white">⚡ ZEROX-AI <span class="text-xs bg-sky-500/10 border border-sky-500/30 text-sky-400 px-2 py-0.5 rounded font-mono font-normal">v20.0 PRODUCTION CORE</span></h1>
             </div>
 
             <div id="active-pair-badge" class="text-xs font-mono bg-gray-950 border border-gray-800 text-sky-400 px-3 py-1 rounded-lg font-bold">
@@ -87,13 +87,13 @@
             <div class="col-span-12 md:col-span-3 bg-gray-900 border border-gray-800/80 rounded-xl p-3 md:p-3.5 flex flex-col justify-between shadow-lg overflow-y-auto">
                 <div>
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2 mb-3">
-                        <span class="text-xs font-bold font-mono text-sky-400">QUANT CONFLUENCE ENGINE</span>
-                        <span id="timer" class="text-xs font-mono bg-gray-950 px-2.5 py-0.5 rounded text-amber-400 border border-amber-900/50">01:00</span>
+                        <span class="text-xs font-bold font-mono text-sky-400">SERVER M1 CANDle CLOSE</span>
+                        <span id="timer" class="text-xs font-mono bg-gray-950 px-2.5 py-0.5 rounded text-amber-400 border border-amber-900/50">--:--</span>
                     </div>
 
                     <!-- SIGNAL OUTPUT DISPLAY -->
                     <div id="signal-box" class="bg-gradient-to-b from-gray-950 to-gray-900 p-4 rounded-xl border border-gray-800 text-center mb-3 transition-all duration-300 shadow-inner">
-                        <span id="signal-status-tag" class="text-[10px] text-gray-400 font-mono block mb-1 uppercase font-bold">● STRICT CONFLUENCE GATEKEEPER</span>
+                        <span id="signal-status-tag" class="text-[10px] text-gray-400 font-mono block mb-1 uppercase font-bold">● QUANT CONFLUENCE MATRIX</span>
                         <div id="signal-text" class="text-xl font-black text-amber-400 tracking-wider">NO TRADE</div>
                         <span id="signal-reason" class="text-[10px] text-gray-400 font-mono block mt-1">REASON: CONNECTING TO LIVE FEED</span>
                     </div>
@@ -144,7 +144,7 @@
                 </div>
 
                 <div class="mt-3 pt-2 border-t border-gray-800/80 text-center">
-                    <span class="text-[10px] text-gray-500 font-mono">ZEROX QUANT CORE • MATHEMATICALLY VERIFIED</span>
+                    <span class="text-[10px] text-gray-500 font-mono">ZEROX QUANT CORE • DERIV SERVER SYNC</span>
                 </div>
             </div>
 
@@ -158,12 +158,13 @@
             currentTvSymbol: "FX:GBPUSD",
             currentDerivSymbol: "frxGBPUSD",
             wsSocket: null,
-            pingInterval: null,
+            timeSyncInterval: null,
             reconnectTimer: null,
             reconnectDelay: 1000,
-            timerInterval: null,
             m1History: [],
-            m5History: []
+            m5History: [],
+            lastClosedCandleEpoch: 0,
+            minRequiredHistory: 50
         };
 
         /* ==================================================================
@@ -171,7 +172,7 @@
            ================================================================== */
         class PrecisionQuantMath {
             
-            // True Exponential Moving Average (EMA)
+            // Exponential Moving Average (EMA)
             static calculateEMA(prices, period) {
                 if (!prices || prices.length < period) return null;
                 const k = 2 / (period + 1);
@@ -182,7 +183,7 @@
                 return ema;
             }
 
-            // Full Standard MACD (12, 26, 9)
+            // Standard MACD (12, 26, 9)
             static calculateMACD(prices) {
                 if (!prices || prices.length < 35) return { macdLine: 0, signalLine: 0, hist: 0 };
                 
@@ -372,7 +373,7 @@
         }
 
         /* ==================================================================
-           2. RESILIENT AUTO-RECONNECTING WEBSOCKET CLIENT (WITH HEARTBEAT)
+           2. WEBSOCKET CLIENT & DERIV SERVER EPOCH TIME SYNC
            ================================================================== */
         function connectWebSocket() {
             if (AppState.wsSocket) {
@@ -384,7 +385,7 @@
                 AppState.wsSocket = null;
             }
 
-            clearInterval(AppState.pingInterval);
+            clearInterval(AppState.timeSyncInterval);
             updateSocketBadge("CONNECTING...", "text-amber-400", "bg-amber-500");
 
             AppState.wsSocket = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
@@ -393,12 +394,14 @@
                 updateSocketBadge("WEBSOCKET: LIVE STREAMING", "text-emerald-400", "bg-emerald-500");
                 AppState.reconnectDelay = 1000;
 
-                AppState.pingInterval = setInterval(() => {
+                // Sync server epoch timestamp every 1 second
+                AppState.timeSyncInterval = setInterval(() => {
                     if (AppState.wsSocket && AppState.wsSocket.readyState === WebSocket.OPEN) {
-                        AppState.wsSocket.send(JSON.stringify({ ping: 1 }));
+                        AppState.wsSocket.send(JSON.stringify({ time: 1 }));
                     }
-                }, 30000);
+                }, 1000);
 
+                // Subscribe to M1 Candle Stream
                 AppState.wsSocket.send(JSON.stringify({
                     ticks_history: AppState.currentDerivSymbol,
                     adjust_start_time: 1,
@@ -406,9 +409,11 @@
                     end: "latest",
                     granularity: 60,
                     style: "candles",
+                    subscribe: 1,
                     req_id: 1
                 }));
 
+                // Subscribe to M5 Candle Stream
                 AppState.wsSocket.send(JSON.stringify({
                     ticks_history: AppState.currentDerivSymbol,
                     adjust_start_time: 1,
@@ -416,6 +421,7 @@
                     end: "latest",
                     granularity: 300,
                     style: "candles",
+                    subscribe: 1,
                     req_id: 5
                 }));
             };
@@ -423,24 +429,70 @@
             AppState.wsSocket.onmessage = function(msg) {
                 try {
                     const res = JSON.parse(msg.data);
-                    
-                    if (res.req_id === 1 && res.candles) AppState.m1History = res.candles;
-                    if (res.req_id === 5 && res.candles) AppState.m5History = res.candles;
 
-                    if (res.ohlc) {
-                        const o = res.ohlc;
-                        if (AppState.m1History.length > 0) {
-                            AppState.m1History[AppState.m1History.length - 1] = {
-                                open: parseFloat(o.open),
-                                high: parseFloat(o.high),
-                                low: parseFloat(o.low),
-                                close: parseFloat(o.close)
-                            };
-                        }
+                    // Handle Server Time Updates & Candle Timer Sync
+                    if (res.time) {
+                        updateServerCandleTimer(res.time);
+                    }
+                    
+                    // Historical Data Ingestion
+                    if (res.req_id === 1 && res.candles) {
+                        AppState.m1History = res.candles.map(c => ({
+                            epoch: c.epoch,
+                            open: parseFloat(c.open),
+                            high: parseFloat(c.high),
+                            low: parseFloat(c.low),
+                            close: parseFloat(c.close)
+                        }));
+                        updateMetricsRealtimeUI();
                     }
 
-                    if (AppState.m1History.length > 0) {
-                        evaluateConfluenceEngine();
+                    if (res.req_id === 5 && res.candles) {
+                        AppState.m5History = res.candles.map(c => ({
+                            epoch: c.epoch,
+                            open: parseFloat(c.open),
+                            high: parseFloat(c.high),
+                            low: parseFloat(c.low),
+                            close: parseFloat(c.close)
+                        }));
+                    }
+
+                    // Live Candle Streaming Updates
+                    if (res.ohlc) {
+                        const o = res.ohlc;
+                        const isM1 = parseInt(o.granularity) === 60;
+                        const isM5 = parseInt(o.granularity) === 300;
+                        const targetArray = isM1 ? AppState.m1History : (isM5 ? AppState.m5History : null);
+                        
+                        if (targetArray && targetArray.length > 0) {
+                            const openTime = parseInt(o.open_time);
+                            const lastIdx = targetArray.length - 1;
+                            
+                            if (targetArray[lastIdx].epoch === openTime) {
+                                // Update intra-candle price ticks
+                                targetArray[lastIdx].open = parseFloat(o.open);
+                                targetArray[lastIdx].high = parseFloat(o.high);
+                                targetArray[lastIdx].low = parseFloat(o.low);
+                                targetArray[lastIdx].close = parseFloat(o.close);
+                            } else if (openTime > targetArray[lastIdx].epoch) {
+                                // New candle officially started on server
+                                targetArray.push({
+                                    epoch: openTime,
+                                    open: parseFloat(o.open),
+                                    high: parseFloat(o.high),
+                                    low: parseFloat(o.low),
+                                    close: parseFloat(o.close)
+                                });
+                                targetArray.shift();
+
+                                // TRIGGER QUANT SIGNAL ENGINE ON M1 CANDLE CLOSE ONLY
+                                if (isM1) {
+                                    AppState.lastClosedCandleEpoch = openTime;
+                                    evaluateQuantSignalOnCandleClose();
+                                }
+                            }
+                        }
+                        updateMetricsRealtimeUI();
                     }
                 } catch (e) {
                     console.error("Payload execution error:", e);
@@ -453,7 +505,7 @@
 
             AppState.wsSocket.onclose = function() {
                 updateSocketBadge(`RECONNECTING (${AppState.reconnectDelay / 1000}s)`, "text-rose-400", "bg-rose-500");
-                clearInterval(AppState.pingInterval);
+                clearInterval(AppState.timeSyncInterval);
                 
                 clearTimeout(AppState.reconnectTimer);
                 AppState.reconnectTimer = setTimeout(() => {
@@ -461,6 +513,21 @@
                     connectWebSocket();
                 }, AppState.reconnectDelay);
             };
+        }
+
+        // Live Server Epoch Sync Timer Calculation
+        function updateServerCandleTimer(serverEpoch) {
+            const secondsInCurrentMinute = serverEpoch % 60;
+            const secondsRemaining = 60 - secondsInCurrentMinute;
+            
+            const timerEl = document.getElementById('timer');
+            if (timerEl) {
+                if (secondsRemaining === 60) {
+                    timerEl.innerText = "00:00";
+                } else {
+                    timerEl.innerText = `00:${secondsRemaining < 10 ? '0' : ''}${secondsRemaining}`;
+                }
+            }
         }
 
         function updateSocketBadge(text, textCls, bgCls) {
@@ -476,12 +543,12 @@
         }
 
         /* ==================================================================
-           3. STRICT HIGH-CONFIDENCE GATEKEEPER EVALUATION
+           3. REALTIME TECHNICAL METRICS RENDERER
            ================================================================== */
-        function evaluateConfluenceEngine() {
+        function updateMetricsRealtimeUI() {
             const history = AppState.m1History;
-            if (!history || history.length < 35) {
-                updateNoTrade("NO TRADE – Awaiting Sufficient Market Data");
+            if (!history || history.length < AppState.minRequiredHistory) {
+                updateNoTrade("NO TRADE – Loading Market Candle History (" + history.length + "/" + AppState.minRequiredHistory + ")");
                 return;
             }
 
@@ -503,15 +570,14 @@
             const pattern = PrecisionQuantMath.detectCandlePattern(opens, highs, lows, closes);
 
             let isM5Bullish = true;
-            let isM5Bearish = true;
             if (AppState.m5History.length >= 21) {
                 const m5Closes = AppState.m5History.map(c => c.close);
                 const m5Ema9 = PrecisionQuantMath.calculateEMA(m5Closes, 9);
                 const m5Ema21 = PrecisionQuantMath.calculateEMA(m5Closes, 21);
                 isM5Bullish = m5Ema9 > m5Ema21;
-                isM5Bearish = m5Ema9 < m5Ema21;
             }
 
+            // Real-Time Render Technical Metric Display
             document.getElementById('calc-close').innerText = lastClose.toFixed(5);
             document.getElementById('calc-ema-m1').innerText = ema9 > ema21 ? "EMA9 > 21 (BULLISH)" : "EMA9 < 21 (BEARISH)";
             document.getElementById('calc-ema-m5').innerText = isM5Bullish ? "M5 BULLISH SYNC" : "M5 BEARISH SYNC";
@@ -522,33 +588,70 @@
             document.getElementById('calc-bb').innerText = bb.bbStatus;
             document.getElementById('calc-pattern').innerText = pattern;
             document.getElementById('calc-sr').innerText = `S1: ${pivots.s1.toFixed(5)} | R1: ${pivots.r1.toFixed(5)}`;
+        }
 
+        /* ==================================================================
+           4. STRICT QUANT CONFLUENCE EVALUATOR (M1 CANDLE CLOSE ONLY)
+           ================================================================== */
+        function evaluateQuantSignalOnCandleClose() {
+            const history = AppState.m1History;
+            if (!history || history.length < AppState.minRequiredHistory) return;
+
+            const opens = history.map(c => c.open);
+            const highs = history.map(c => c.high);
+            const lows = history.map(c => c.low);
+            const closes = history.map(c => c.close);
+
+            const lastClose = closes[closes.length - 1];
+
+            const ema9 = PrecisionQuantMath.calculateEMA(closes, 9);
+            const ema21 = PrecisionQuantMath.calculateEMA(closes, 21);
+            const rsi = PrecisionQuantMath.calculateRSI(closes, 14);
+            const macd = PrecisionQuantMath.calculateMACD(closes);
+            const adxData = PrecisionQuantMath.calculateWilderADX(highs, lows, closes, 14);
+            const pivots = PrecisionQuantMath.calculatePivotSR(highs, lows, closes);
+
+            let isM5Bullish = true;
+            let isM5Bearish = true;
+            if (AppState.m5History.length >= 21) {
+                const m5Closes = AppState.m5History.map(c => c.close);
+                const m5Ema9 = PrecisionQuantMath.calculateEMA(m5Closes, 9);
+                const m5Ema21 = PrecisionQuantMath.calculateEMA(m5Closes, 21);
+                isM5Bullish = m5Ema9 > m5Ema21;
+                isM5Bearish = m5Ema9 < m5Ema21;
+            }
+
+            // High-Probability Scalping Rules
             const isM1Bullish = ema9 > ema21;
             const isM1Bearish = ema9 < ema21;
-            const isRsiBuyOk = rsi > 54 && rsi < 68;
-            const isRsiSellOk = rsi < 46 && rsi > 32;
-            const isMacdBuyOk = macd.hist > 0 && macd.macdLine > macd.signalLine;
-            const isMacdSellOk = macd.hist < 0 && macd.macdLine < macd.signalLine;
-            const isAdxBuyOk = adxData.adx >= 25 && adxData.plusDI > adxData.minusDI;
-            const isAdxSellOk = adxData.adx >= 25 && adxData.minusDI > adxData.plusDI;
+            
+            const isRsiBuyOk = rsi > 50 && rsi < 72;
+            const isRsiSellOk = rsi < 50 && rsi > 28;
+            
+            const isMacdBuyOk = macd.hist > 0;
+            const isMacdSellOk = macd.hist < 0;
+            
+            const isAdxBuyOk = adxData.adx >= 20 && adxData.plusDI > adxData.minusDI;
+            const isAdxSellOk = adxData.adx >= 20 && adxData.minusDI > adxData.plusDI;
 
+            // Decision Engine Execution
             if (isM1Bullish && isM5Bullish && isRsiBuyOk && isMacdBuyOk && isAdxBuyOk) {
-                if (lastClose >= pivots.r1) {
+                if (pivots.r1 > 0 && lastClose >= pivots.r1) {
                     updateNoTrade("NO TRADE – Price Blocked by Pivot Resistance (R1)");
                 } else {
                     updateSignalBox("STRONG BUY", "CONFIRMATION: M1 + M5 MULTI-TIMEFRAME MATCH", "from-emerald-950/60 to-gray-950 border-emerald-700/80", "text-emerald-400");
                 }
             } else if (isM1Bearish && isM5Bearish && isRsiSellOk && isMacdSellOk && isAdxSellOk) {
-                if (lastClose <= pivots.s1) {
+                if (pivots.s1 > 0 && lastClose <= pivots.s1) {
                     updateNoTrade("NO TRADE – Price Blocked by Pivot Support (S1)");
                 } else {
                     updateSignalBox("STRONG SELL", "CONFIRMATION: M1 + M5 MULTI-TIMEFRAME MATCH", "from-rose-950/60 to-gray-950 border-rose-700/80", "text-rose-400");
                 }
             } else {
                 let reason = "NO TRADE – Market Sideways / Indicator Conflict";
-                if (adxData.adx < 25) reason = "NO TRADE – Weak ADX Trend Strength (<25)";
+                if (adxData.adx < 20) reason = "NO TRADE – Weak ADX Trend Power (<20)";
                 else if (isM1Bullish !== isM5Bullish) reason = "NO TRADE – Timeframe Trend Mismatch (M1 vs M5)";
-                else if (rsi >= 68 || rsi <= 32) reason = "NO TRADE – RSI Extreme / Reversal Risk";
+                else if (rsi >= 72 || rsi <= 28) reason = "NO TRADE – RSI Extreme / Reversal Risk";
 
                 updateNoTrade(reason);
             }
@@ -577,7 +680,7 @@
         }
 
         /* ==================================================================
-           4. UI & SYSTEM CORE HANDLERS
+           5. UI & SYSTEM CORE HANDLERS
            ================================================================== */
         function loadTradingViewChart(symbol) {
             const chartContainer = document.getElementById('tradingview_chart');
@@ -603,6 +706,7 @@
             AppState.currentDerivSymbol = derivSymbol;
             AppState.m1History = [];
             AppState.m5History = [];
+            AppState.lastClosedCandleEpoch = 0;
             
             const badge = document.getElementById('active-pair-badge');
             if (badge) {
@@ -620,24 +724,8 @@
             connectWebSocket();
         }
 
-        function startTimerClock() {
-            let sec = 59;
-            clearInterval(AppState.timerInterval);
-            AppState.timerInterval = setInterval(() => {
-                const timerEl = document.getElementById('timer');
-                if (timerEl) {
-                    timerEl.innerText = `00:${sec < 10 ? '0' : ''}${sec}`;
-                }
-                sec--;
-                if (sec < 0) {
-                    sec = 59;
-                    if (AppState.m1History.length > 0) evaluateConfluenceEngine();
-                }
-            }, 1000);
-        }
-
         /* ==================================================================
-           5. SECURE AUTHENTICATION FLOW
+           6. SECURE AUTHENTICATION FLOW
            ================================================================== */
         function handleLogin(e) {
             e.preventDefault();
@@ -658,7 +746,6 @@
                 document.getElementById('main-terminal').classList.add('flex');
                 loadTradingViewChart(AppState.currentTvSymbol);
                 connectWebSocket();
-                startTimerClock();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
